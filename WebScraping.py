@@ -1,40 +1,60 @@
 import requests
 from bs4 import BeautifulSoup
-#BeautifulSoup is a Python library that makes it easy to parse and navigate through HTML or XML
+import pandas as pd
 
-baseurl  = 'https://ikman.lk'
+# Base URL for the website
+baseurl = 'https://ikman.lk'
 
-#helps avoid being blocked by the website.
+# User-Agent header to mimic a browser request
 headers = {
-
-    'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
-    #defines a "user-agent" to mimic a browser request
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
 }
 
-#list to store the links of  individual car ad
-productLinks =[]
+# Set to store unique links for car ads
+# Set does not allow duplicate elements 
+productLinks = set()
 
-#for first 5 pages
-for x in range (1,5):
-    #Sends a GET request to the URL
-    r = requests.get(f'https://ikman.lk/en/ads/sri-lanka/cars?sort=date&order=desc&buy_now=0&urgent=0&page={x}')
+# Scrape the first 5 pages
+for x in range(1, 2):
+    # Sends a GET request to the URL
+    r = requests.get(f'{baseurl}/en/ads/sri-lanka/cars?sort=date&order=desc&buy_now=0&urgent=0&page={x}', headers=headers)
     
-    #Converts the response into a BeautifulSoup object (soup) to make it easier to analyze and extract the HTML content
-    soup = BeautifulSoup(r.content,'lxml')
+    # Converts the response into a BeautifulSoup object to analyze HTML content
+    soup = BeautifulSoup(r.content, 'lxml')
 
-    #This looks for <li> tags with specific classes 
-    productList = soup.findAll('li', class_ = 'normal--2QYVk gtm-normal-ad')
+    # Find all car ad items
+    productList = soup.findAll('li', class_='normal--2QYVk gtm-normal-ad')
 
-    #print(productList)
-
-
+    # Loop through items and extract unique links
     for items in productList:
-        #it looks for <a> tags with href attributes (these tags contain links).
-        for link in items.findAll('a', href = True):
-            # print(link['href'])
-            #It adds the full URL
-            productLinks.append(baseurl + link['href'])
+        for link in items.findAll('a', href=True):
+            full_url = baseurl + link['href']
+            productLinks.add(full_url)  # Add to the set
+
+# Print all unique product links
+print(f"Total unique links: {len(productLinks)}")
+print(productLinks)
+
+# Extract details from each unique product link
+carList = []
+for link in productLinks:
+    r = requests.get(link, headers=headers)
+    soup = BeautifulSoup(r.content, 'lxml')
+
+    # Extract car name and price
+    name = soup.find('h1', class_='title--3s1R8').text.strip() if soup.find('h1', class_='title--3s1R8') else 'N/A'
+    price = soup.find('div', class_='amount--3NTpl').text.strip() if soup.find('div', class_='amount--3NTpl') else 'N/A'
+
+    # Store car details in a dictionary
+    car = {
+        'Name': name,
+        'Price': price
+    }
+    print(car)
+    carList.append(car)
 
 
-
-#print(len(productLinks))
+df = pd.DataFrame(carList)
+print(df.head(15))
+#Export Dataframe to csv
+df.to_csv('DataSet/car_data.csv', index=False)
