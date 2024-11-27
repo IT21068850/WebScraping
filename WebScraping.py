@@ -1,6 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+import re
+
 
 # Base URL for the website
 baseurl = 'https://ikman.lk'
@@ -43,12 +45,21 @@ for link in productLinks:
 
     # Extract car name and price
     name = soup.find('h1', class_='title--3s1R8').text.strip() if soup.find('h1', class_='title--3s1R8') else 'N/A'
+    datePosted = soup.find('div', class_ = 'subtitle-wrapper--1M5Mv').text.strip() if soup.find('div', class_ = 'subtitle-wrapper--1M5Mv') else 'N/A'
     price = soup.find('div', class_='amount--3NTpl').text.strip() if soup.find('div', class_='amount--3NTpl') else 'N/A'
+
+    # Extract only the date and month from the 'datePosted' text using regular expressions
+    date_match = re.search(r'(\d{1,2} [A-Za-z]+)', datePosted)
+    if date_match:
+        datePosted = date_match.group(1)
+    else:
+        datePosted = 'N/A'
 
     # Store car details in a dictionary
     car = {
         'Name': name,
-        'Price': price
+        'Price': price,
+        'Date Posted': datePosted
     }
     print(car)
     carList.append(car)
