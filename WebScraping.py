@@ -64,8 +64,9 @@ for link in productLinks:
     print(car)
     carList.append(car)
 
-
+#Displaying as a Dataframe
 df = pd.DataFrame(carList)
 print(df.head(15))
 #Export Dataframe to csv
 df.to_csv('DataSet/car_data.csv', index=False)
+
