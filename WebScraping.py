@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import re
+import mysql.connector
 
 
 # Base URL for the website
@@ -71,4 +72,5 @@ df = pd.DataFrame(carList)
 print(df.head(15))
 #Export Dataframe to csv
 df.to_csv('DataSet/car_data.csv', index=False)
+
 
